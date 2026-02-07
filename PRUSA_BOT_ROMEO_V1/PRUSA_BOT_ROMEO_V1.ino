@@ -17,11 +17,7 @@
 
 #include <Arduino.h>
 #include <Adafruit_BNO08x.h>
-#include <PID.h>
-#include <WiFi.h>
-#include <WiFiUdp.h>
-#include <ArduinoOTA.h>  // For enabling over the air updates
-#include "DFRobot_GDL.h"
+#include <PID_v1.h>
 #include <EEPROM.h>
 
 //  Loop Frequency
@@ -32,6 +28,13 @@
 
 //#define ENABLE_OTA        // Over The Air Updates, switch off once tuning/development is done
 //#define ENABLE_UDP_DEBUG  // send / receive UDP debug data for tuning, switch off once tuning is done.
+#if defined(ENABLE_OTA) | defined(ENABLE_UDP_DEBUG)
+#include <WiFi.h>
+#include <WiFiUdp.h>
+#ifdef ENABLE_OTA
+#include <ArduinoOTA.h>  // For enabling over the air updates
+#endif
+#endif
 IPAddress pcIP(10,1,0,123);   // your PC IP address for SerialPlot
 
 #define USE_LEDC          // ledcWrite routines rather than analogWrite for Motor PWM
@@ -89,14 +92,14 @@ IPAddress pcIP(10,1,0,123);   // your PC IP address for SerialPlot
 //  PID VARIABLES & INSTANCES
 
 // left motor / magnetic removable side
-float  lDesiredRpm=0, lMeasuredRpm=0, lDriveOutput=0;
-std::PID lPid(&lMeasuredRpm, &lDriveOutput, &lDesiredRpm,3.2f,6.8f,0.12f, DIRECT); // 0.00012, 0.0005
+double  lDesiredRpm=0, lMeasuredRpm=0, lDriveOutput=0;
+PID lPid(&lMeasuredRpm, &lDriveOutput, &lDesiredRpm,3.2f,6.8f,0.12f, DIRECT); // 0.00012, 0.0005
 // right motor / fixed side
-float  rDesiredRpm=0, rMeasuredRpm=0, rDriveOutput=0;
-std::PID rPid(&rMeasuredRpm, &rDriveOutput, &rDesiredRpm,3.2f,6.8f,0.12f, DIRECT); // 0.2, 3.5, 0.001
+double  rDesiredRpm=0, rMeasuredRpm=0, rDriveOutput=0;
+PID rPid(&rMeasuredRpm, &rDriveOutput, &rDesiredRpm,3.2f,6.8f,0.12f, DIRECT); // 0.2, 3.5, 0.001
 // turn PID
-float  measuredYaw=0, setYaw=0, yawOutput=0;
-std::PID yawPid(&measuredYaw, &yawOutput, &setYaw,0.35f,2.0f,0.005f, DIRECT); // 0.2, 3.5, 0.001
+double  measuredYaw=0, setYaw=0, yawOutput=0;
+PID yawPid(&measuredYaw, &yawOutput, &setYaw,0.35f,2.0f,0.005f, DIRECT); // 0.2, 3.5, 0.001
 
 // variables sued in control caluculations and in experimental speed PID
 float pitchOutput=0,measuredSpeed=0;
